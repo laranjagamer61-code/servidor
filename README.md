@@ -1,0 +1,2 @@
+# servidor
+Sempre ativo

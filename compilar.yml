@@ -1,1 +1,36 @@
-.github/workflows/compilar.yml
+name: Compilar rio.pwn
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  compilar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar seu codigo
+        uses: actions/checkout@v4
+
+      - name: Baixar compilador e includes do open.mp
+        run: |
+          git clone --depth 1 https://github.com/openmultiplayer/compiler
+          git clone --depth 1 https://github.com/openmultiplayer/omp-stdlib
+
+      - name: Construir o pawncc
+        run: |
+          cd compiler
+          mkdir build && cd build
+          cmake ../source/compiler
+          make
+          echo "PAWNCC=$(find . -name pawncc -type f | head -n 1)" >> $GITHUB_ENV
+
+      - name: Compilar rio.pwn
+        run: |
+          mkdir -p saida
+          "$(pwd)/compiler/build/${PAWNCC#./}" gamemodes/rio.pwn -i omp-stdlib -o saida/rio.amx
+
+      - name: Guardar o rio.amx
+        uses: actions/upload-artifact@v4
+        with:
+          name: rio-amx
+          path: saida/rio.amx
